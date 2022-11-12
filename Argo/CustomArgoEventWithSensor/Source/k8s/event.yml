@@ -1,0 +1,12 @@
+    apiVersion: argoproj.io/v1alpha1
+    kind: EventSource
+    metadata:
+      name: custom-event-source
+    spec:
+      generic:
+        example:
+          insecure: true
+          url: "host.docker.internal:8080"
+          config: |-
+            key1: value1
+            key2: value2

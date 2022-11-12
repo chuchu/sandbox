@@ -15,7 +15,7 @@ type server struct {
 func (s *server) StartEventSource(in *EventSource, stream Eventing_StartEventSourceServer) error {
 	for {
 		event := Event{
-			Name:    "NewStudyEvent",
+			Name:    "NewEvent",
 			Payload: []byte("1.2.3"),
 		}
 		stream.Send(&event)
