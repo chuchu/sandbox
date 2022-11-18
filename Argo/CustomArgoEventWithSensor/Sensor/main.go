@@ -20,40 +20,35 @@ func (s *server) FetchResource(
 	log.Print("FetchResource was called.")
 	log.Printf("Resource: %s", string(in.Resource))
 
-	// resp, err := http.Get("https://raw.githubusercontent.com/VaibhavPage/tekton-cd-trigger/master/example.yaml")
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-
-	// body, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-
 	response := FetchResourceResponse{
-		Resource: []byte("{}"),
+		Resource: []byte("{\"key\": \"value\"}"),
 	}
+
 	return &response, nil
 }
 
 func (s *server) Execute(
-	context.Context,
-	*ExecuteRequest) (*ExecuteResponse, error) {
+	ctx context.Context,
+	in *ExecuteRequest) (*ExecuteResponse, error) {
 
 	log.Print("Execute was called.")
+	log.Printf("Payload: %s", in.Payload)
+	log.Printf("Resource: %s", in.Resource)
+
 	response := ExecuteResponse{
 		Response: []byte(""),
 	}
+
 	return &response, nil
 }
 
 func (s *server) ApplyPolicy(
-	context.Context,
-	*ApplyPolicyRequest) (*ApplyPolicyResponse, error) {
+	ctx context.Context,
+	in *ApplyPolicyRequest) (*ApplyPolicyResponse, error) {
 
 	log.Print("ApplyPolicy was called.")
+	log.Printf("Request: %s", in.Request)
 
-	log.Print("Execute was called.")
 	response := ApplyPolicyResponse{
 		Success: true,
 		Message: "",
@@ -62,7 +57,7 @@ func (s *server) ApplyPolicy(
 }
 
 func main() {
-	listener, err := net.Listen("tcp", "127.0.0.1:8081")
+	listener, err := net.Listen("tcp", ":8081")
 
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

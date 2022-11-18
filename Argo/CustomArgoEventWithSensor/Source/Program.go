@@ -37,7 +37,7 @@ func (s *server) StartEventSource(
 }
 
 func startGrpcServer(channel chan int) {
-	listener, err := net.Listen("tcp", "127.0.0.1:8080")
+	listener, err := net.Listen("tcp", ":8080")
 
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -67,7 +67,6 @@ func main() {
 	input := bufio.NewScanner(os.Stdin)
 
 	for input.Scan() {
-		fmt.Print("Please enter the number of events to be raised: ")
 		i, err := strconv.Atoi(input.Text())
 		if err != nil {
 			log.Fatalf("Error: %v", err)

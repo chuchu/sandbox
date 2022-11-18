@@ -7,14 +7,14 @@
         serviceAccountName: argo-events-sa
       dependencies:
         - name: test-dep
-          eventSourceName: custom-event-source
+          eventSourceName: custom
           eventName: example
       triggers:
         - template:
             name: custom-trigger
             custom:
               # the url of the trigger server.
-              serverURL: host.docker.internal:8081
+              serverURL: 10.0.1.1:8081
               # spec is map of string->string and it is sent over to trigger server.
               # the spec can be anything you want as per your use-case, just make sure the trigger server understands the spec map.
               spec:
@@ -29,7 +29,10 @@
               #      dataKey: body.namespace
               #    dest: metadata.namespace
               payload:
-                key: value
+                - src:
+                    dependencyName: test-dep
+                    contextKey: type
+                  dest: type
           # These parameters are applied on entire template body.
           # So that you can parameterize anything under `custom` key such as `serverURL`, `spec` etc.
           #parameters:
