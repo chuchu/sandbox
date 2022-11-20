@@ -31,8 +31,22 @@
               payload:
                 - src:
                     dependencyName: test-dep
+                    contextKey: datacontenttype
+                  dest: datacontenttype
+                - src:
+                    dependencyName: test-dep
                     contextKey: type
                   dest: type
+                - src:
+                    dependencyName: test-dep
+                    dataKey: body
+                    value: body not found
+                  dest: body
+                - src:
+                    dependencyName: test-dep
+                    dataKey: body.message
+                    value: message not found
+                  dest: message
           # These parameters are applied on entire template body.
           # So that you can parameterize anything under `custom` key such as `serverURL`, `spec` etc.
           #parameters:

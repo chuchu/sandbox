@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"encoding/json"
 	"log"
 	"net"
 	"os"
@@ -17,6 +17,10 @@ type server struct {
 	channel chan int
 }
 
+type payload struct {
+	Message string
+}
+
 func (s *server) StartEventSource(
 	in *EventSource,
 	stream Eventing_StartEventSourceServer) error {
@@ -25,11 +29,25 @@ func (s *server) StartEventSource(
 
 	for {
 		number := <-s.channel
+
 		for i := 0; i < number; i++ {
-			log.Printf("Send event: %d", i)
+
+			p := payload{
+				Message: "MyMessage",
+			}
+
+			pm, err := json.Marshal(p)
+
+			if err != nil {
+				log.Fatalf("Could not marshal payload: %v", err)
+			}
+
+			log.Printf("Send payload: '%v'", pm)
+
 			event := Event{
-				Name:    s.name,
-				Payload: []byte(fmt.Sprintf("Event %d", i)),
+				Name: s.name,
+				//Payload: []byte(payload),
+				Payload: pm,
 			}
 			stream.Send(&event)
 		}
