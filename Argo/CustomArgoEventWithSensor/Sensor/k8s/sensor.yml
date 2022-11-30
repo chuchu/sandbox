@@ -47,10 +47,6 @@
                     dataKey: body.message
                     value: message not found
                   dest: message
-          # These parameters are applied on entire template body.
-          # So that you can parameterize anything under `custom` key such as `serverURL`, `spec` etc.
-          #parameters:
-          #  - src:
-          #      dependencyName: test-dep
-          #      dataKey: body.url
-          #    dest: custom.spec.url
+          retryStrategy:
+            # Give up after this many times
+            steps: 3

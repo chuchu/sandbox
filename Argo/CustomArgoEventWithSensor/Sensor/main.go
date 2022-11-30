@@ -2,6 +2,7 @@ package main
 
 import (
 	context "context"
+	"errors"
 	"log"
 	"net"
 
@@ -20,6 +21,8 @@ func (s *server) FetchResource(
 	log.Print("FetchResource was called.")
 	log.Printf("Resource: %s", string(in.Resource))
 
+	// return nil, errors.New("Out of resources.")
+
 	response := FetchResourceResponse{
 		Resource: []byte("{\"key\": \"value\"}"),
 	}
@@ -35,11 +38,14 @@ func (s *server) Execute(
 	log.Printf("Payload: %s", in.Payload)
 	log.Printf("Resource: %s", in.Resource)
 
-	response := ExecuteResponse{
-		Response: []byte(""),
-	}
+	log.Print("Return error.")
+	return nil, errors.New("Out of resources.")
 
-	return &response, nil
+	// response := ExecuteResponse{
+	// 	Response: []byte(""),
+	// }
+
+	// return &response, nil
 }
 
 func (s *server) ApplyPolicy(
