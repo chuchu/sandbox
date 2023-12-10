@@ -1,0 +1,6 @@
+@aspnet_otel2_HostAddress = http://localhost:5147
+
+GET {{aspnet_otel2_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
