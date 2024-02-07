@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -50,9 +51,9 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/weatherforecast", ([FromHeader(Name = "TRACE_ID")] string traceId) =>
 {
-    using (var slow = MyActivitySource.StartActivity("GetWeatherForecast"))
+    using (var slow = MyActivitySource.StartActivity("GetWeatherForecast", ActivityKind.Server, traceId))
     {
         var forecast =  Enumerable.Range(1, 5).Select(index =>
             new WeatherForecast

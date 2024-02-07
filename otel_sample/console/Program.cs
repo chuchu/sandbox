@@ -19,7 +19,7 @@ internal class Program
                 serviceName: "OTELSampleConsole",
                 serviceVersion: "1.0.0"))
             .AddSource("OTELSample.Console", "OTELSample.Library")
-            .AddHttpClientInstrumentation()
+            // .AddHttpClientInstrumentation()
             .AddConsoleExporter()
             .AddOtlpExporter()
             .Build();
@@ -42,7 +42,16 @@ internal class Program
 
             using (var client = new HttpClient())
             {
-                client.GetStringAsync("http://localhost:5147/weatherforecast").Wait();
+                using (var requestMessage = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    "http://localhost:5147/weatherforecast"))
+                {
+                    requestMessage.Headers.Add("TRACE_ID", activity.Id);
+                    
+                    client.SendAsync(requestMessage).Wait();
+                }
+                
+                // client.GetStringAsync("http://localhost:5147/weatherforecast").Wait();
             }
         }
     }
