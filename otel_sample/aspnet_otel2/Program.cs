@@ -8,9 +8,6 @@ using OpenTelemetry.Trace;
 ActivitySource MyActivitySource = new("OTELSample.WeatherService");
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -63,10 +60,30 @@ app.MapGet("/weatherforecast", ([FromHeader(Name = "TRACE_ID")] string traceId) 
                 summaries[Random.Shared.Next(summaries.Length)]
             ))
             .ToArray();
+        Thread.Sleep(50);
         return forecast;
     }
 })
 .WithName("GetWeatherForecast")
+.WithOpenApi();
+
+app.MapGet("/weatherforecast2", () =>
+{
+    using (var slow = MyActivitySource.StartActivity("GetWeatherForecast", ActivityKind.Server))
+    {
+        var forecast =  Enumerable.Range(1, 5).Select(index =>
+            new WeatherForecast
+            (
+                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                Random.Shared.Next(-20, 55),
+                summaries[Random.Shared.Next(summaries.Length)]
+            ))
+            .ToArray();
+        Thread.Sleep(50);
+        return forecast;
+    }
+})
+.WithName("GetWeatherForecast2")
 .WithOpenApi();
 
 app.Run();

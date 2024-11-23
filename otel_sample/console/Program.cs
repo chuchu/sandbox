@@ -1,73 +1,90 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using library;
 using OpenTelemetry;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Grpc.Net.Client;
+using grpc_otel;
 
 internal class Program
 {
-    private static readonly ActivitySource MyActivitySource = new ActivitySource("OTELSample.Console");
-    
+    private static readonly ActivitySource GlobalActivitySource =
+        new ActivitySource("OTELSample.Console");
+
     private static void Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        Console.WriteLine("Starting application ...");
 
         using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
+            .SetResourceBuilder(ResourceBuilder.CreateDefault()
+            .AddService(
                 serviceName: "OTELSampleConsole",
                 serviceVersion: "1.0.0"))
             .AddSource("OTELSample.Console", "OTELSample.Library")
-            // .AddHttpClientInstrumentation()
+            .AddGrpcClientInstrumentation()
+            .AddHttpClientInstrumentation()
             .AddConsoleExporter()
             .AddOtlpExporter()
             .Build();
 
-        using (var activity = MyActivitySource.StartActivity("Say Hello"))
-        {
-            activity?.SetTag("foo", 1);
-            activity?.SetTag("bar", "Hello, World!");
-            activity?.SetTag("baz", new int[] { 1, 2, 3 });
-            activity?.SetStatus(ActivityStatusCode.Ok);
+        using var activity = GlobalActivitySource.StartActivity("ConsoleWorker");
+        activity?.SetTag("foo", 1);
+        activity?.SetTag("bar", "Hello, World!");
+        activity?.SetTag("baz", new int[] { 1, 2, 3 });
 
-            Thread.Sleep(100);
+        Thread.Sleep(100);
+        CallLibWorker();
+        Thread.Sleep(200);
 
-            Worker w = new Worker();
-            w.Work();
+        CallInternalWorker();
 
-            Thread.Sleep(200);
+        CallWeatherForecast();
 
-            InternalWorker();
+        CallGreeterService().Wait();
 
-            using (var client = new HttpClient())
-            {
-                using (var requestMessage = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    "http://localhost:5147/weatherforecast"))
-                {
-                    requestMessage.Headers.Add("TRACE_ID", activity.Id);
-                    
-                    client.SendAsync(requestMessage).Wait();
-                }
-                
-                // client.GetStringAsync("http://localhost:5147/weatherforecast").Wait();
-            }
-        }
+        activity?.SetStatus(ActivityStatusCode.Ok);
     }
 
-    static void InternalWorker()
-        {
-            using (var activity = MyActivitySource.StartActivity("InternalWorker"))
+    static void CallLibWorker()
+    {
+        using var activity = GlobalActivitySource.StartActivity("LibWorker");
+        Worker w = new Worker();
+        w.Work();
+    }
+
+    static void CallWeatherForecast()
+    {
+        using var activity = GlobalActivitySource.StartActivity("WeatherForecast");
+        var client = new HttpClient();
+        var requestMessage = new HttpRequestMessage(
+            HttpMethod.Get,
+            "http://localhost:5147/weatherforecast");
+        requestMessage.Headers.Add("TRACE_ID", activity?.Id);
+        client.SendAsync(requestMessage).Wait();
+        
+        client.GetStringAsync("http://localhost:5147/weatherforecast2").Wait();
+    }
+
+    static void CallInternalWorker()
+    {
+        using var activity = GlobalActivitySource.StartActivity("InternalWorker");
+        activity?.SetTag("foo", 1);
+        activity?.SetTag("bar", "Hello, World!");
+        activity?.SetTag("baz", new int[] { 1, 2, 3 });
+        Thread.Sleep(100);
+        activity?.SetStatus(ActivityStatusCode.Ok);
+    }
+
+    static async Task CallGreeterService()
+    {
+        using var activity = GlobalActivitySource.StartActivity("GreeterService");
+        using var channel = GrpcChannel.ForAddress("http://localhost:5267");
+        var client = new Greeter.GreeterClient(channel);
+        var reply = await client.SayHelloAsync(
+            new HelloRequest
             {
-                activity?.SetTag("foo", 1);
-                activity?.SetTag("bar", "Hello, World!");
-                activity?.SetTag("baz", new int[] {1, 2, 3});
-                activity?.SetStatus(ActivityStatusCode.Ok);
-
-                Thread.Sleep(100);
-            }
-        }
+                Name = "GreeterClient"
+            });
+        Console.WriteLine("Greeting: " + reply.Message);
+    }
 }
-
-
