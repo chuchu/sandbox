@@ -5,6 +5,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Grpc.Net.Client;
 using grpc_otel;
+using System.Text;
 
 internal class Program
 {
@@ -27,7 +28,17 @@ internal class Program
             .AddOtlpExporter()
             .Build();
 
-        using var activity = GlobalActivitySource.StartActivity("ConsoleWorker");
+        // Here the std out of the current process can be captured.
+        // This is useful for testing purposes.
+        TextWriter originalOut = Console.Out;
+        using MemoryStream ms = new MemoryStream();
+        using StreamWriter sw = new StreamWriter(ms);
+        Console.SetOut(sw);
+
+        using var activity = 
+          GlobalActivitySource.StartActivity(
+              "ConsoleWorker");
+        
         activity?.SetTag("foo", 1);
         activity?.SetTag("bar", "Hello, World!");
         activity?.SetTag("baz", new int[] { 1, 2, 3 });
@@ -38,11 +49,17 @@ internal class Program
 
         CallInternalWorker();
 
-        CallWeatherForecast();
+        //CallWeatherForecast();
 
-        CallGreeterService().Wait();
+        //CallGreeterService().Wait();
 
         activity?.SetStatus(ActivityStatusCode.Ok);
+
+        Console.SetOut(originalOut);
+        ms.Seek(0, SeekOrigin.Begin);
+        StreamReader sr = new StreamReader(ms);
+        Console.WriteLine("Captured output:");
+        Console.WriteLine(sr.ReadToEnd());
     }
 
     static void CallLibWorker()
